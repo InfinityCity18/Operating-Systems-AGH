@@ -22,6 +22,7 @@ MAIN_TARGET=main
 
 SIG_LIB_DIR=libsig
 SIG_LIB_NAME=libsig
+SIG_LIB_NAME_NOPREFIX=sig
 SIG_LIB_SRC=$(wildcard $(SIG_LIB_DIR)/*.c)
 SIG_LIB_OBJ=$(addprefix $(BUILD)/,$(notdir $(SIG_LIB_SRC:.c=.o)))
 SIG_LIB_STATIC=libsig.a
@@ -40,15 +41,16 @@ static: $(SIG_LIB_OBJ) $(MAIN_TARGET) $(CHILD_OBJ)
 
 shared: CFLAGS += -fPIC
 shared: $(SIG_LIB_OBJ) $(MAIN_TARGET) $(CHILD_OBJ)
-	$(CC) -shared $(CFLAGS) -o $(SIG_LIB_SHARED) $(SIG_LIB_OBJ)
+	$(CC) -shared $(LDFLAGS) -o $(SIG_LIB_SHARED) $(SIG_LIB_OBJ)
+	$(CC) $(CHILD_OBJ) -L ./ -l$(SIG_LIB_NAME_NOPREFIX) -Wl,-rpath,. -o $(CHILD_TARGET)
+
+dynamic: CFLAGS += -fPIC
+dynamic: $(SIG_LIB_OBJ) $(MAIN_TARGET) $(CHILD_OBJ)
+	$(CC) -shared $(LDFLAGS) -o $(SIG_LIB_SHARED) $(SIG_LIB_OBJ)
+	$(CC) -D USEDLL $(CHILD_OBJ) -o $(CHILD_TARGET)
 
 $(BUILD)/%.o: $(SIG_LIB_DIR)/%.c 
 	$(CC) $(CFLAGS) $< -o $@
-
-$(SIG_LIB_STATIC): $(SIG_LIB_OBJ)
-
-$(SIG_LIB_SHARED): $(SIG_LIB_OBJ)
-	$()
 
 $(MAIN_OBJ): $(MAIN_SRC) $(BUILD)
 	$(CC) $(CFLAGS) $< -o $@
@@ -70,4 +72,4 @@ $(info variable x = $(SIG_LIB_OBJ))
 clean:
 	-@ $(RM) $(BUILD)/*.o 
 	-@ $(RM) $(EXECS)        
-	-@ $(RM) $(SIG_LIB_STATIC)
+	-@ $(RM) $(SIG_LIB_STATIC) $(SIG_LIB_SHARED)

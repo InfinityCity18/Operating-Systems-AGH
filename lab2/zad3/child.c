@@ -4,7 +4,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifndef USEDLL
+#include <dlfcn.h>
+#else
 #include "sig_lib.h"
+#endif
+
 
 // Te zadanie mogło mieć bardziej szczegółowy opis, przepraszam jeśli zostało źle zinterpretowane.
 
@@ -22,6 +27,15 @@ void handler_sigusr2(int sig, siginfo_t *si, void *ucontext)
 }
 
 int main(int argc, char* argv[]) {
+    #ifndef USEDLL
+        void *handle = dlopen("./libsig.so", RTLD_LAZY);
+        if (!handle) {
+            printf("Otworzenie DLL w procesie potomnym nie powiodlo sie:\n");
+            printf("%s\n", dlerror());
+            _exit(1);
+        }
+    #endif
+
     printf("Początek procesu potomnego\n");
 
     // ustawienie handlera na SIGUSR2
@@ -50,20 +64,57 @@ int main(int argc, char* argv[]) {
 
     switch (argument)
     {
+    char* error;
     case 0:
+        #ifndef USEDLL
+            void (*sig_default)();
+            sig_default = (void (*)())dlsym(handle,"sig_default");
+            if((error = dlerror()) != NULL){
+                printf("Wczytywanie symbolu z DLL nie powiodlo sie\n");
+                printf("%s\n", error);
+                _exit(1);
+            }
+        #endif
         sig_default();
         break;
     case 1:
+        #ifndef USEDLL
+            void (*sig_ignore)();
+            sig_ignore = (void (*)())dlsym(handle,"sig_ignore");
+            if((error = dlerror()) != NULL){
+                printf("Wczytywanie symbolu z DLL nie powiodlo sie\n");
+                printf("%s\n", error);
+                _exit(1);
+            }
+        #endif
         sig_ignore();
         break;
     case 2:
+        #ifndef USEDLL
+            void (*sig_handle)();
+            sig_handle = (void (*)())dlsym(handle,"sig_handle");
+            if((error = dlerror()) != NULL){
+                printf("Wczytywanie symbolu z DLL nie powiodlo sie\n");
+                printf("%s\n", error);
+                _exit(1);
+            }
+        #endif
         sig_handle();
         break;
     case 3:
+        #ifndef USEDLL
+            void (*sig_mask)();
+            sig_mask = (void (*)())dlsym(handle,"sig_mask");
+            if((error = dlerror()) != NULL){
+                printf("Wczytywanie symbolu z DLL nie powiodlo sie\n");
+                printf("%s\n", error);
+                _exit(1);
+            }
+        #endif
         sig_mask();
         break;
     default:
-        printf("Nieosiaglany kod");
+        printf("Nieosiaglany kod\n");
         exit(1);
     }
 
@@ -81,4 +132,7 @@ int main(int argc, char* argv[]) {
         sleep(1);
     }
     printf("Pętla została wykonana w całości.\n");
+    #ifndef USEDLL
+        dlclose(handle);
+    #endif
 }
