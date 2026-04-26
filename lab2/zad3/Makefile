@@ -66,8 +66,6 @@ $(CHILD_TARGET): $(CHILD_OBJ) $(SIG_LIB_STATIC)
 $(BUILD):
 	mkdir -p build
 
-$(info variable x = $(SIG_LIB_OBJ))
-
 .PHONY: clean
 clean:
 	-@ $(RM) $(BUILD)/*.o 
