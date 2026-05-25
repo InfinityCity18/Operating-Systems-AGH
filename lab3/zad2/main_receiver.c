@@ -12,12 +12,11 @@
 #include <fcntl.h>
 
 #define eprintf(error_msg) fprintf(stderr, error_msg)
+#define FIFO_FILENAME "integral_fifofile"
 
 double f(double x) {
     return 4 / (1 + x * x);
 }
-
-#define FIFO_FILENAME "integral_fifofile"
 
 void child_compute_integral(int pipefd, double left, double right, double rect_width) {
     double total = 0.0;
